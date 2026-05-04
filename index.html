@@ -629,6 +629,7 @@
             <h1>Prepárate para el Parcial</h1>
             <p class="subtitle">Banco de 100 preguntas</p>
             <button class="btn btn-main" onclick="initQuiz('all')">MODO EXAMEN COMPLETO (100 preguntas)</button>
+            <button class="btn btn-main" style="margin-top: 0.5rem; background: linear-gradient(135deg, #a855f7, #7c3aed); color: white;" onclick="initSimulacro()">⚡ SIMULACRO RÁPIDO (20 preguntas)</button>
             <p class="subtitle" style="margin-top:0.7rem; margin-bottom:0.3rem;">— o seleccioná unidades —</p>
             <div class="menu-grid">
                 <button class="btn unit-btn" data-unit="1.1" onclick="toggleUnit(this, '1.1')">
@@ -693,15 +694,18 @@
                 <button id="retry-errors-btn" class="btn btn-main" style="background: linear-gradient(135deg,#ef4444,#f97316); color: white; border:none;"
                     onclick="retryErrors()">🔁 Reintentar Errores</button>
                 <button class="btn btn-main" style="background: rgba(129,140,248,0.2); border: 1px solid #818cf8; color: #818cf8;" onclick="showReview()">📋 Ver Revisión Completa</button>
-                <button class="btn btn-main" style="width: 100%; background: rgba(51,65,85,0.6); border:1px solid var(--border); color: #94a3b8;" onclick="location.reload()">🏠 Volver al Inicio</button>
+                <button class="btn btn-main" style="width: 100%; background: rgba(51,65,85,0.6); border:1px solid var(--border); color: #94a3b8;" onclick="resetAndHome()">🏠 Volver al Inicio</button>
             </div>
         </div>
 
         <!-- REVISIÓN COMPLETA -->
         <div id="review" class="screen">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-                <h2 style="margin:0; font-size:1.1rem; background:linear-gradient(135deg,#38bdf8,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Revisión Completa</h2>
-                <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="closeReview()">← Volver</button>
+            <div style="display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2 style="margin:0; font-size:1.1rem; background:linear-gradient(135deg,#38bdf8,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Revisión Completa</h2>
+                    <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="closeReview()">← Volver</button>
+                </div>
+                <button id="btn-filter-review" class="btn" style="width:100%; justify-content:center; background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.2); font-size:0.85rem;" onclick="toggleReviewFilter()">🔍 Mostrar solo errores</button>
             </div>
             <div id="review-list"></div>
         </div>
@@ -900,6 +904,24 @@
             document.body.classList.add('hide-header');
             document.getElementById('home').classList.remove('active');
             document.getElementById('result').classList.remove('active');
+            document.getElementById('quiz').classList.add('active');
+            showQuestion();
+        }
+
+        function initSimulacro() {
+            const units = ["1.1", "1.2", "1.3", "1.4", "1.5"];
+            let selected = [];
+            units.forEach(u => {
+                const unitQs = quizData.filter(q => q.u === u).sort(() => Math.random() - 0.5);
+                selected = selected.concat(unitQs.slice(0, 4));
+            });
+            currentQuestions = shuffleOptions(selected.sort(() => Math.random() - 0.5));
+            userUnit = "Simulacro";
+            currentIndex = 0;
+            score = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+            document.body.classList.add('hide-header');
+            document.getElementById('home').classList.remove('active');
             document.getElementById('quiz').classList.add('active');
             showQuestion();
         }
@@ -1121,16 +1143,39 @@
             document.getElementById('res-grade').innerText = msg;
         }
 
+        let reviewOnlyErrors = false;
+        function toggleReviewFilter() {
+            reviewOnlyErrors = !reviewOnlyErrors;
+            const btn = document.getElementById('btn-filter-review');
+            btn.innerText = reviewOnlyErrors ? "👁️ Mostrar todas las preguntas" : "🔍 Mostrar solo errores";
+            showReview();
+        }
+
         function showReview() {
             document.getElementById('result').classList.remove('active');
             document.getElementById('review').classList.add('active');
             const list = document.getElementById('review-list');
             list.innerHTML = '';
             const letters = ['A', 'B', 'C', 'D'];
+            
+            let questionsToShow = currentQuestions;
+            if (reviewOnlyErrors) {
+                questionsToShow = currentQuestions.filter((q, idx) => userAnswers[idx] !== null && userAnswers[idx] !== q.c);
+            }
+
+            if (questionsToShow.length === 0 && reviewOnlyErrors) {
+                list.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;">🎉 ¡No tenés errores en esta sesión!</div>';
+                return;
+            }
+
             currentQuestions.forEach((q, idx) => {
                 const userAns = userAnswers[idx];
                 const isAnswered = userAns !== null;
                 const isCorrect = isAnswered && userAns === q.c;
+                
+                // If filter is on, skip correct ones
+                if (reviewOnlyErrors && isCorrect) return;
+
                 const statusClass = !isAnswered ? 'r-skip' : isCorrect ? 'r-correct' : 'r-wrong';
                 const icon = !isAnswered ? '⬜' : isCorrect ? '✅' : '❌';
                 let optsHTML = q.o.map((opt, i) => {
@@ -1150,6 +1195,11 @@
         function closeReview() {
             document.getElementById('review').classList.remove('active');
             document.getElementById('result').classList.add('active');
+        }
+
+        function resetAndHome() {
+            localStorage.removeItem('quizSave');
+            location.reload();
         }
     </script>
 
