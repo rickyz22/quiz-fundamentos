@@ -82,9 +82,22 @@
         .screen::-webkit-scrollbar { display: none; }
 
         .screen.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             animation: fadeIn 0.4s ease;
         }
+
+        /* Contenedor de scroll interno para el quiz */
+        .quiz-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .quiz-scroll-area::-webkit-scrollbar { width: 4px; }
+        .quiz-scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
         @keyframes fadeIn {
             from {
@@ -416,7 +429,10 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.5rem;
-            margin-top: 1rem;
+            margin-top: 0.8rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(56,189,248,0.1);
+            background: var(--card-bg);
         }
 
         .btn-nav {
@@ -654,8 +670,7 @@
         <!-- QUIZ -->
         <div id="quiz" class="screen">
             <div class="header-quiz">
-                <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="goToMenu()">← Volver al
-                    menú</button>
+                <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="goToMenu()">← Volver</button>
                 <span id="label-unit" class="q-meta">Unidad 1.1</span>
                 <span id="label-progress" class="q-meta" style="color: var(--accent-color)">1 / 100</span>
             </div>
@@ -663,17 +678,19 @@
                 <div id="bar" class="progress-fill"></div>
             </div>
 
-            <div class="q-meta" id="score-live">Puntaje: 0 / 0</div>
-            <div id="question-box">
-                <h2 class="question-text" id="text-q">Cargando pregunta...</h2>
-                <div class="options-grid" id="options-box"></div>
-            </div>
+            <div class="quiz-scroll-area">
+                <div id="score-live">Puntaje: 0 / 0</div>
+                <div id="question-box">
+                    <h2 class="question-text" id="text-q">Cargando pregunta...</h2>
+                    <div class="options-grid" id="options-box"></div>
+                </div>
 
-            <div id="feedback" class="feedback-area">
-                <div id="feedback-icon" class="feedback-icon">✅</div>
-                <div class="feedback-content">
-                    <div id="feedback-status" class="feedback-status">Correcto</div>
-                    <div id="feedback-desc" class="feedback-explanation"></div>
+                <div id="feedback" class="feedback-area">
+                    <div id="feedback-icon" class="feedback-icon">✅</div>
+                    <div class="feedback-content">
+                        <div id="feedback-status" class="feedback-status">Correcto</div>
+                        <div id="feedback-desc" class="feedback-explanation"></div>
+                    </div>
                 </div>
             </div>
 
