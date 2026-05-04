@@ -25,36 +25,34 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
+            overflow: hidden;
+        }
+
+        .hide-header h1, .hide-header .subtitle {
+            display: none !important;
         }
 
         .container {
             width: 100%;
             max-width: 850px;
             background: var(--card-bg);
-            padding: 1.25rem;
-            border-radius: 1rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--accent-color);
-            margin-bottom: 0.25rem;
-            font-size: 1.6rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 1.2rem;
-            font-size: 0.9rem;
+            max-height: calc(100vh - 10px);
+            display: flex;
+            flex-direction: column;
         }
 
         .screen {
             display: none;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
+        .screen::-webkit-scrollbar { display: none; }
 
         .screen.active {
             display: block;
@@ -146,25 +144,25 @@
         }
 
         .question-text {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 500;
-            line-height: 1.3;
-            margin-bottom: 1.2rem;
+            line-height: 1.2;
+            margin-bottom: 0.8rem;
         }
 
         .options-grid {
             display: grid;
-            gap: 0.6rem;
+            gap: 0.4rem;
         }
 
         .option-btn {
             background: #1e293b;
             border: 2px solid #334155;
             color: #f1f5f9;
-            padding: 0.8rem 1rem;
-            border-radius: 0.6rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.5rem;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.95rem;
             text-align: left;
             transition: 0.2s;
             display: flex;
@@ -205,9 +203,9 @@
 
         /* Feedback */
         .feedback-area {
-            margin-top: 1.2rem;
-            padding: 1rem;
-            border-radius: 0.6rem;
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            border-radius: 0.5rem;
             display: none;
             border-left: 5px solid transparent;
         }
@@ -229,15 +227,15 @@
 
         .feedback-status {
             font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
         }
 
         .feedback-explanation {
             color: #cbd5e1;
-            line-height: 1.5;
+            line-height: 1.3;
             font-style: italic;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
         }
 
         @keyframes slideIn {
@@ -547,6 +545,8 @@
             score = 0;
             userAnswers = new Array(currentQuestions.length).fill(null);
 
+            document.body.classList.add('hide-header');
+
             document.getElementById('home').classList.remove('active');
             document.getElementById('result').classList.remove('active');
             document.getElementById('quiz').classList.add('active');
@@ -556,6 +556,7 @@
 
         function goToMenu() {
             if (confirm("¿Estás seguro de que quieres volver al menú? Perderás el progreso actual.")) {
+                document.body.classList.remove('hide-header');
                 currentIndex = 0;
                 score = 0;
                 userAnswers = [];
@@ -580,6 +581,7 @@
             score = 0;
             userAnswers = new Array(currentQuestions.length).fill(null);
 
+            document.body.classList.add('hide-header');
             document.getElementById('result').classList.remove('active');
             document.getElementById('quiz').classList.add('active');
             showQuestion();
