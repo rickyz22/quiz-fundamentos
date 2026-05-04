@@ -526,7 +526,79 @@
         .unit-bar-fill.mid { background: linear-gradient(90deg, #f59e0b, #eab308); }
         .unit-bar-fill.high { background: linear-gradient(90deg, #22c55e, #38bdf8); }
 
-        @media (max-width: 600px) {
+        /* Review screen */
+        .review-item {
+            background: rgba(22,31,53,0.8);
+            border: 1px solid var(--border);
+            border-radius: 0.7rem;
+            padding: 0.7rem 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .review-item.r-correct { border-left: 3px solid var(--success); }
+        .review-item.r-wrong   { border-left: 3px solid var(--error); }
+        .review-item.r-skip    { border-left: 3px solid #475569; }
+
+        .review-q {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
+        }
+
+        .review-opt {
+            font-size: 0.78rem;
+            padding: 0.2rem 0;
+            color: #64748b;
+        }
+
+        .review-opt.r-user-correct { color: #4ade80; font-weight: 600; }
+        .review-opt.r-user-wrong   { color: #f87171; font-weight: 600; text-decoration: line-through; }
+        .review-opt.r-answer       { color: #4ade80; font-weight: 600; }
+
+        /* Resume banner */
+        .resume-banner {
+            background: rgba(56,189,248,0.1);
+            border: 1px solid rgba(56,189,248,0.3);
+            border-radius: 0.75rem;
+            padding: 0.7rem 1rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .resume-banner p {
+            margin: 0;
+            font-size: 0.82rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .btn-resume {
+            background: var(--accent-color);
+            color: #0b1120;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+
+        .btn-discard {
+            background: transparent;
+            color: #64748b;
+            border: none;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
             .container {
                 padding: 1rem;
             }
@@ -547,6 +619,13 @@
     <div class="container">
         <!-- INICIO -->
         <div id="home" class="screen active">
+            <div id="resume-banner" class="resume-banner" style="display:none">
+                <p>📖 Tenés una sesión guardada</p>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn-discard" onclick="discardSave()">Descartar</button>
+                    <button class="btn-resume" onclick="resumeSession()">Continuar</button>
+                </div>
+            </div>
             <h1>Prepárate para el Parcial</h1>
             <p class="subtitle">Banco de 100 preguntas</p>
             <button class="btn btn-main" onclick="initQuiz('all')">MODO EXAMEN COMPLETO (100 preguntas)</button>
@@ -610,11 +689,21 @@
             <p class="stat-line" id="res-correct">Correctas: 0 de 100</p>
             <p class="stat-line" id="res-grade">Calificación: Reprobado</p>
             <div id="unit-breakdown" class="unit-results"></div>
-            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
-                <button id="retry-errors-btn" class="btn btn-main" style="background: var(--error); color: white;"
-                    onclick="retryErrors()">Reintentar Errores</button>
-                <button class="btn btn-main" style="width: 100%;" onclick="location.reload()">Volver al Inicio</button>
+            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                <button id="retry-errors-btn" class="btn btn-main" style="background: linear-gradient(135deg,#ef4444,#f97316); color: white; border:none;"
+                    onclick="retryErrors()">🔁 Reintentar Errores</button>
+                <button class="btn btn-main" style="background: rgba(129,140,248,0.2); border: 1px solid #818cf8; color: #818cf8;" onclick="showReview()">📋 Ver Revisión Completa</button>
+                <button class="btn btn-main" style="width: 100%; background: rgba(51,65,85,0.6); border:1px solid var(--border); color: #94a3b8;" onclick="location.reload()">🏠 Volver al Inicio</button>
             </div>
+        </div>
+
+        <!-- REVISIÓN COMPLETA -->
+        <div id="review" class="screen">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                <h2 style="margin:0; font-size:1.1rem; background:linear-gradient(135deg,#38bdf8,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Revisión Completa</h2>
+                <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="closeReview()">← Volver</button>
+            </div>
+            <div id="review-list"></div>
         </div>
     </div>
 
@@ -740,6 +829,53 @@
         let userUnit = "all";
         let selectedUnits = new Set();
 
+        // --- MEZCLA DE OPCIONES ---
+        function shuffleOptions(questions) {
+            return questions.map(q => {
+                const idx = [0, 1, 2, 3];
+                idx.sort(() => Math.random() - 0.5);
+                return {
+                    ...q,
+                    o: idx.map(i => q.o[i]),
+                    c: idx.indexOf(q.c)
+                };
+            });
+        }
+
+        // --- LOCALSTORAGE ---
+        function saveState() {
+            localStorage.setItem('quizSave', JSON.stringify({
+                currentQuestions, currentIndex, score, userAnswers, userUnit
+            }));
+        }
+
+        function discardSave() {
+            localStorage.removeItem('quizSave');
+            document.getElementById('resume-banner').style.display = 'none';
+        }
+
+        function resumeSession() {
+            const saved = JSON.parse(localStorage.getItem('quizSave'));
+            if (!saved) return;
+            currentQuestions = saved.currentQuestions;
+            currentIndex = saved.currentIndex;
+            score = saved.score;
+            userAnswers = saved.userAnswers;
+            userUnit = saved.userUnit;
+            document.getElementById('resume-banner').style.display = 'none';
+            document.body.classList.add('hide-header');
+            document.getElementById('home').classList.remove('active');
+            document.getElementById('quiz').classList.add('active');
+            showQuestion();
+        }
+
+        // Check for saved session on load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('quizSave')) {
+                document.getElementById('resume-banner').style.display = 'flex';
+            }
+        });
+
         function toggleUnit(btn, unit) {
             if (selectedUnits.has(unit)) {
                 selectedUnits.delete(unit);
@@ -754,8 +890,9 @@
         function startRepaso() {
             if (selectedUnits.size === 0) return;
             const units = [...selectedUnits];
-            currentQuestions = quizData.filter(q => units.includes(q.u))
-                .sort(() => Math.random() - 0.5);
+            currentQuestions = shuffleOptions(
+                quizData.filter(q => units.includes(q.u)).sort(() => Math.random() - 0.5)
+            );
             userUnit = units.join('+');
             currentIndex = 0;
             score = 0;
@@ -770,9 +907,9 @@
         function initQuiz(unit) {
             userUnit = unit;
             if (unit === 'all') {
-                currentQuestions = [...quizData].sort(() => Math.random() - 0.5);
+                currentQuestions = shuffleOptions([...quizData].sort(() => Math.random() - 0.5));
             } else {
-                currentQuestions = quizData.filter(q => q.u === unit);
+                currentQuestions = shuffleOptions(quizData.filter(q => q.u === unit));
             }
 
             currentIndex = 0;
@@ -790,12 +927,14 @@
 
         function goToMenu() {
             if (confirm("¿Estás seguro de que quieres volver al menú? Perderás el progreso actual.")) {
+                localStorage.removeItem('quizSave');
                 document.body.classList.remove('hide-header');
                 currentIndex = 0;
                 score = 0;
                 userAnswers = [];
                 document.getElementById('quiz').classList.remove('active');
                 document.getElementById('result').classList.remove('active');
+                document.getElementById('review').classList.remove('active');
                 document.getElementById('home').classList.add('active');
             }
         }
@@ -903,6 +1042,7 @@
             });
 
             updateScore();
+            saveState(); // Auto-save after each answer
         }
 
         function prevQuestion() {
@@ -979,6 +1119,37 @@
             else msg = "💪 Repasa todo el contenido, falta reforzar conceptos.";
 
             document.getElementById('res-grade').innerText = msg;
+        }
+
+        function showReview() {
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('review').classList.add('active');
+            const list = document.getElementById('review-list');
+            list.innerHTML = '';
+            const letters = ['A', 'B', 'C', 'D'];
+            currentQuestions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isAnswered = userAns !== null;
+                const isCorrect = isAnswered && userAns === q.c;
+                const statusClass = !isAnswered ? 'r-skip' : isCorrect ? 'r-correct' : 'r-wrong';
+                const icon = !isAnswered ? '⬜' : isCorrect ? '✅' : '❌';
+                let optsHTML = q.o.map((opt, i) => {
+                    let cls = 'review-opt';
+                    if (i === q.c) cls += ' r-answer';
+                    if (i === userAns && !isCorrect) cls += ' r-user-wrong';
+                    if (i === userAns && isCorrect) cls += ' r-user-correct';
+                    return `<div class="${cls}">${letters[i]}) ${opt}</div>`;
+                }).join('');
+                const item = document.createElement('div');
+                item.className = `review-item ${statusClass}`;
+                item.innerHTML = `<div class="review-q">${icon} ${idx + 1}. ${q.q}</div>${optsHTML}`;
+                list.appendChild(item);
+            });
+        }
+
+        function closeReview() {
+            document.getElementById('review').classList.remove('active');
+            document.getElementById('result').classList.add('active');
         }
     </script>
 
