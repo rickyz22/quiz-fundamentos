@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Arquitectura de Computadoras - 100 Preguntas</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-color: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Menu */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: #334155;
+            color: white;
+            border: 2px solid transparent;
+            padding: 1.2rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: #475569;
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .btn-main {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .btn-main:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        /* Quiz UI */
+        .header-quiz {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #334155;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-fill {
+            background: var(--accent-color);
+            height: 100%;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+
+        .q-meta {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 2rem;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: #1e293b;
+            border: 2px solid #334155;
+            color: #f1f5f9;
+            padding: 1.2rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 1.05rem;
+            text-align: left;
+            transition: 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .option-btn:hover {
+            border-color: var(--accent-color);
+            background: #334155;
+        }
+
+        .option-btn.selected-correct {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .option-btn.selected-wrong {
+            border-color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .option-btn.highlight-correct {
+            border-color: var(--success);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .option-btn.disabled {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .option-letter {
+            font-weight: bold;
+            color: var(--accent-color);
+            min-width: 25px;
+        }
+
+        /* Feedback */
+        .feedback-area {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            display: none;
+            border-left: 5px solid transparent;
+        }
+
+        .feedback-area.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .feedback-area.correct {
+            background: rgba(34, 197, 94, 0.05);
+            border-left-color: var(--success);
+        }
+
+        .feedback-area.wrong {
+            background: rgba(239, 68, 68, 0.05);
+            border-left-color: var(--error);
+        }
+
+        .feedback-status {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-explanation {
+            color: #cbd5e1;
+            line-height: 1.5;
+            font-style: italic;
+            font-size: 0.95rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-nav {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-prev {
+            background: #475569;
+            color: white;
+        }
+
+        .btn-next {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .btn-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Results */
+        .result-card {
+            text-align: center;
+        }
+
+        .score-box {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            margin: 1rem 0;
+        }
+
+        .stat-line {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin: 0.5rem 0;
+        }
+
+        .unit-results {
+            margin-top: 1.5rem;
+            text-align: left;
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .unit-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .unit-item:last-child {
+            border-bottom: none;
+        }
+
+        .unit-label {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .unit-score {
+            font-family: monospace;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+
+            .nav-btns {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- INICIO -->
+        <div id="home" class="screen active">
+            <h1>Prepárate para el Parcial</h1>
+            <p class="subtitle">Banco de 100 preguntas</p>
+            <div class="menu-grid">
+                <button class="btn btn-main" onclick="initQuiz('all')">MODO EXAMEN COMPLETO (100 preguntas)</button>
+                <button class="btn" onclick="initQuiz('1.1')"><span class="option-letter">1.1</span> Evolución y
+                    Perspectiva Tecnológica</button>
+                <button class="btn" onclick="initQuiz('1.2')"><span class="option-letter">1.2</span> Von Neumann y Arq.
+                    Funcional</button>
+                <button class="btn" onclick="initQuiz('1.3')"><span class="option-letter">1.3</span> La CPU: Motor de
+                    Ejecución</button>
+                <button class="btn" onclick="initQuiz('1.4')"><span class="option-letter">1.4</span> Gestión y Jerarquía
+                    de Memoria</button>
+                <button class="btn" onclick="initQuiz('1.5')"><span class="option-letter">1.5</span> Interfaz de HW y
+                    Arranque</button>
+            </div>
+        </div>
+
+        <!-- QUIZ -->
+        <div id="quiz" class="screen">
+            <div class="header-quiz">
+                <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="goToMenu()">← Volver al
+                    menú</button>
+                <span id="label-unit" class="q-meta">Unidad 1.1</span>
+                <span id="label-progress" class="q-meta" style="color: var(--accent-color)">1 / 100</span>
+            </div>
+            <div class="progress-container">
+                <div id="bar" class="progress-fill"></div>
+            </div>
+
+            <div class="q-meta" id="score-live">Puntaje: 0 / 0</div>
+            <div id="question-box">
+                <h2 class="question-text" id="text-q">Cargando pregunta...</h2>
+                <div class="options-grid" id="options-box"></div>
+            </div>
+
+            <div id="feedback" class="feedback-area">
+                <div id="feedback-status" class="feedback-status">✅ Correcto</div>
+                <div id="feedback-desc" class="feedback-explanation"></div>
+            </div>
+
+            <div class="nav-btns">
+                <button id="prev-btn" class="btn-nav btn-prev" onclick="prevQuestion()">Anterior</button>
+                <button id="action-btn" class="btn-nav btn-next" onclick="handleAction()">Siguiente</button>
+            </div>
+        </div>
+
+        <!-- FINAL -->
+        <div id="result" class="screen result-card">
+            <h1>Resultado Final</h1>
+            <div class="score-box" id="res-percent">0%</div>
+            <p class="stat-line" id="res-correct">Correctas: 0 de 100</p>
+            <p class="stat-line" id="res-grade">Calificación: Reprobado</p>
+            <div id="unit-breakdown" class="unit-results"></div>
+            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                <button id="retry-errors-btn" class="btn btn-main" style="background: var(--error); color: white;"
+                    onclick="retryErrors()">Reintentar Errores</button>
+                <button class="btn btn-main" style="width: 100%;" onclick="location.reload()">Volver al Inicio</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATOS DEL CUESTIONARIO (100 PREGUNTAS EXACTAS) ---
+        const quizData = [
+            // Unidad 1.1 (1-20)
+            { u: "1.1", q: "¿Cuál fue el principal avance que distinguió a la segunda generación de computadoras respecto a la primera?", o: ["El uso de circuitos integrados en lugar de transistores discretos", "La sustitución de las válvulas de vacío por transistores de estado sólido", "La incorporación del microprocesador en un único chip de silicio", "La adopción del sistema operativo multitarea como estándar industrial"], c: 1, e: "La segunda generación (1956-1963) introdujo los transistores, mucho más eficientes que las válvulas de vacío." },
+            { u: "1.1", q: "La Ley de Moore, formulada en 1965, establece que la densidad de transistores en un circuito integrado:", o: ["Se duplica aproximadamente cada 18-24 meses manteniendo el mismo costo", "Crece linealmente un 50% por año sin importar el costo de fabricación", "Se triplica cada 36 meses con una reducción proporcional del consumo energético", "Se duplica cada 10 años siguiendo un ciclo fijo de innovación tecnológica"], c: 0, e: "Establece la duplicación exponencial de transistores en circuitos integrados cada dos años aprox." },
+            { u: "1.1", q: "¿Cuál de los siguientes dispositivos es un ejemplo representativo de un sistema embebido (embedded system)?", o: ["Un servidor de bases de datos instalado en un centro de cómputo", "Un controlador de temperatura dentro de un horno industrial inteligente", "Una estación de trabajo de diseño gráfico con GPU dedicada", "Un clúster de computadoras para cálculo científico de alto rendimiento"], c: 1, e: "Los sistemas embebidos están dedicados a una función específica dentro de un dispositivo mayor." },
+            { u: "1.1", q: "El principio fundamental de la computación cuántica que la diferencia de la computación clásica es:", o: ["El uso de transistores ópticos en lugar de transistores de silicio", "El procesamiento paralelo masivo mediante miles de núcleos de CPU clásicos", "La utilización de qubits que pueden representar 0 y 1 simultáneamente gracias a la superposición", "La aplicación de inteligencia artificial para optimizar ciclos de instrucción"], c: 2, e: "Los qubits aprovechan la superposición cuántica para procesar información de forma no binaria clásica." },
+            { u: "1.1", q: "La máquina de Turing, propuesta por Alan Turing en 1936, es relevante para la computación moderna porque:", o: ["Fue el primer hardware real capaz de ejecutar programas almacenados en memoria", "Definió un modelo matemático abstracto que establece los límites de lo que puede ser computado", "Demostró empíricamente que los transistores podían reemplazar las válvulas de vacío", "Introdujo el concepto de sistema operativo con gestión de procesos concurrentes"], c: 1, e: "Es el fundamento teórico de la computación; define la capacidad y límites de cualquier algoritmo." },
+            { u: "1.1", q: "¿Qué característica define principalmente a la cuarta generación de computadoras?", o: ["La introducción de la programación en lenguaje ensamblador", "El uso de circuitos integrados de pequeña escala (SSI)", "La integración de millones de transistores en un único microprocesador (VLSI)", "La aparición de los primeros lenguajes de programación de alto nivel"], c: 2, e: "La cuarta generación se basa en la miniaturización masiva en un solo chip (microprocesador)." },
+            { u: "1.1", q: "El Internet de las Cosas (IoT) se diferencia de la computación tradicional principalmente por:", o: ["Utilizar exclusivamente redes inalámbricas de quinta generación (5G)", "Conectar objetos físicos del mundo real a redes digitales para recopilar y compartir datos", "Operar solo en entornos industriales con protocolos propietarios de comunicación", "Requerir procesamiento centralizado en la nube para todas sus operaciones"], c: 1, e: "Extiende la conectividad a objetos cotidianos para permitir su interacción y monitoreo." },
+            { u: "1.1", q: "El proyecto ENIAC (1945) representó un hito histórico porque:", o: ["Fue la primera computadora en utilizar transistores para sus operaciones lógicas", "Introdujo por primera vez el concepto de programa almacenado en memoria principal", "Fue una de las primeras computadoras electrónicas de propósito general a gran escala", "Empleó por primera vez circuitos integrados para realizar cálculos aritméticos"], c: 2, e: "ENIAC fue la primera computadora digital electrónica de propósito general, aunque era enorme y valvular." },
+            { u: "1.1", q: "¿Cuál fue el aporte conceptual más significativo de la máquina diferencial de Charles Babbage?", o: ["Demostrar que era posible construir una calculadora mecánica programable mediante tarjetas perforadas", "Introducir por primera vez el concepto de arquitectura de programa almacenado en memoria", "Proponer el uso de la lógica binaria para representar operaciones aritméticas complejas", "Desarrollar el primer lenguaje de programación de alto nivel para uso científico"], c: 0, e: "Babbage fue el pionero en diseñar máquinas mecánicas para automatizar cálculos complejos." },
+            { u: "1.1", q: "En el contexto de la evolución tecnológica, el término 'convergencia digital' se refiere a:", o: ["La migración de todos los sistemas de cómputo hacia arquitecturas de 64 bits", "La integración de múltiples funcionalidades (comunicación, cómputo, entretenimiento) en un único dispositivo", "La estandarización de protocolos de comunicación entre dispositivos de distintos fabricantes", "La transición de redes analógicas a redes digitales de banda ancha en telecomunicaciones"], c: 1, e: "Un claro ejemplo es el smartphone, que integra múltiples dispositivos en uno solo." },
+            { u: "1.1", q: "¿Cuál de los siguientes describe mejor el concepto de 'computación en el borde' (Edge Computing)?", o: ["Procesamiento de datos en servidores centrales para reducir la latencia de red", "Ejecución de cómputo cerca del origen de los datos para minimizar latencia y ancho de banda", "Uso de dispositivos móviles como nodos primarios de procesamiento en redes empresariales", "Distribución del almacenamiento de datos en múltiples centros de datos globales"], c: 1, e: "Procesar datos cerca de la fuente reduce el tráfico de red y mejora el tiempo de respuesta." },
+            { u: "1.1", q: "La transición de circuitos SSI (Small Scale Integration) a VLSI (Very Large Scale Integration) implicó principalmente:", o: ["Un cambio en el material semiconductor de germanio a silicio como base de fabricación", "La posibilidad de integrar cientos de miles a millones de componentes en un solo chip", "La sustitución de la lógica binaria por lógica ternaria para mayor densidad informacional", "El abandono del paradigma Von Neumann en favor de arquitecturas de flujo de datos"], c: 1, e: "VLSI permitió poner millones de transistores en un chip, habilitando los procesadores modernos." },
+            { u: "1.1", q: "El concepto de 'software libre' en el contexto de la evolución tecnológica implica:", o: ["Que el software no tiene ningún costo económico para el usuario final", "La libertad de ejecutar, estudiar, modificar y distribuir el software y sus fuentes", "Que el código fuente está disponible solo para fines educativos sin posibilidad de modificación", "Que el software está exento del pago de impuestos comerciales en jurisdicciones específicas"], c: 1, e: "Se basa en las libertades del usuario sobre el programa, no necesariamente en su gratuidad." },
+            { u: "1.1", q: "¿Qué generación de computadoras introdujo por primera vez el concepto de tiempo compartido (time-sharing)?", o: ["Primera generación (válvulas de vacío)", "Segunda generación (transistores)", "Tercera generación (circuitos integrados)", "Cuarta generación (microprocesadores)"], c: 2, e: "La tercera generación permitió que varios usuarios usaran una computadora central simultáneamente." },
+            { u: "1.1", q: "En la arquitectura de sistemas modernos, ¿qué se entiende por 'heterogeneous computing'?", o: ["El uso combinado de diferentes tipos de procesadores (CPU, GPU, FPGA) para optimizar tareas específicas", "La conexión de computadoras de distintos fabricantes en una misma red corporativa", "La ejecución de múltiples sistemas operativos en un único servidor físico mediante virtualización", "La distribución geográfica del procesamiento en diferentes zonas horarias del mundo"], c: 0, e: "Es el uso de distintos aceleradores de hardware trabajando en conjunto para una tarea." },
+            { u: "1.1", q: "¿Cuál fue el significado histórico del lanzamiento del Intel 4004 en 1971?", o: ["Fue el primer procesador en superar la barrera del gigahercio en frecuencia de reloj", "Introdujo la arquitectura de 32 bits que permitió la computación personal masiva", "Fue el primer microprocesador comercial, integrando la CPU completa en un único chip", "Estableció el estándar de instrucciones x86 que domina la computación personal hasta hoy"], c: 2, e: "Fue el primer CPU contenido en un solo chip de silicio, naciendo la era del microprocesador." },
+            { u: "1.1", q: "En el contexto de tendencias modernas, ¿qué característica distingue a un FPGA de un microprocesador convencional?", o: ["El FPGA opera a frecuencias de reloj significativamente más altas que cualquier CPU comercial", "El FPGA puede reconfigurarse hardware post-fabricación para implementar diferentes funciones lógicas", "El FPGA utiliza lógica analógica en lugar de digital para mayor precisión de cálculo", "El FPGA integra memoria RAM y ROM en el mismo chip para eliminar el cuello de botella de Von Neumann"], c: 1, e: "Un FPGA es hardware 'programable' que puede cambiar su estructura lógica después de fabricado." },
+            { u: "1.1", q: "La computación en la nube (cloud computing) representa un cambio paradigmático respecto al modelo tradicional porque:", o: ["Elimina por completo la necesidad de hardware local en las organizaciones modernas", "Convierte los recursos de cómputo en servicios elásticos accesibles bajo demanda a través de redes", "Garantiza latencia cero en todas las operaciones de procesamiento de datos empresariales", "Elimina los riesgos de seguridad al centralizar el control en proveedores certificados"], c: 1, e: "Permite acceder a potencia de cómputo masiva como un servicio elástico y bajo demanda." },
+            { u: "1.1", q: "¿Cuál de los siguientes ejemplos ilustra mejor el concepto de 'computación distribuida'?", o: ["Un servidor con múltiples procesadores ejecutando un único proceso de alto rendimiento", "Una red de computadoras independientes que colaboran para resolver un problema computacional común", "Un sistema operativo que gestiona múltiples procesos en un solo núcleo de CPU", "Una GPU con miles de núcleos procesando operaciones matriciales en paralelo"], c: 1, e: "Son múltiples sistemas separados que actúan como uno solo para resolver grandes tareas." },
+            { u: "1.1", q: "La 'arquitectura Harvard', a diferencia de la arquitectura Von Neumann, se caracteriza por:", o: ["Usar memorias físicamente separadas para instrucciones y datos, permitiendo acceso simultáneo", "Eliminar el uso de registros internos en la CPU para simplificar el ciclo de instrucción", "Almacenar instrucciones y datos en la misma memoria con acceso secuencial estricto", "Requerir que todas las instrucciones tengan la misma longitud en bits para simplificar el decodificador"], c: 0, e: "Separa los buses de datos y de instrucciones para permitir lecturas paralelas y ganar velocidad." },
+
+            // Unidad 1.2 (21-40)
+            { u: "1.2", q: "El 'cuello de botella de Von Neumann' surge porque:", o: ["La ALU no puede procesar más de una instrucción por ciclo de reloj en arquitecturas clásicas", "Instrucciones y datos comparten el mismo bus de comunicación entre CPU y memoria principal", "El bus de direcciones tiene una capacidad limitada que restringe el espacio de memoria direccionable", "Los dispositivos de entrada/salida operan a velocidades incompatibles con el reloj del procesador"], c: 1, e: "Como todo pasa por un solo canal, la CPU a menudo debe esperar a que lleguen los datos de la memoria." },
+            { u: "1.2", q: "En la arquitectura Von Neumann, ¿cuál es la función específica del bus de control?", o: ["Transportar los datos binarios entre la memoria y los registros de la CPU", "Indicar las direcciones de memoria donde se encuentran instrucciones y operandos", "Transmitir señales de sincronización, habilitación de lectura/escritura y estado del sistema", "Gestionar la comunicación exclusiva entre la CPU y los dispositivos de entrada/salida"], c: 2, e: "Envía señales de 'orden' (lectura, escritura, reloj) a todos los componentes del sistema." },
+            { u: "1.2", q: "El Registro de Dirección de Memoria (MAR) en el modelo Von Neumann tiene como función:", o: ["Almacenar temporalmente el resultado de la última operación aritmética ejecutada por la ALU", "Contener la dirección de la celda de memoria que será accedida en la próxima operación de E/S", "Guardar la instrucción que se está ejecutando actualmente para facilitar su decodificación", "Mantener el valor del puntero de pila para gestionar llamadas a subrutinas"], c: 1, e: "Almacena el índice o dirección del casillero de memoria que se quiere acceder." },
+            { u: "1.2", q: "¿Por qué la anchura del bus de datos impacta directamente en el rendimiento del sistema?", o: ["Determina la frecuencia máxima a la que puede operar el reloj del sistema sin errores", "Define cuántos bits pueden transferirse en paralelo por ciclo, afectando el ancho de banda de memoria", "Limita el número máximo de dispositivos de entrada/salida que pueden conectarse simultáneamente", "Establece la cantidad máxima de registros que puede tener el banco de registros de la CPU"], c: 1, e: "A mayor ancho (64 bits vs 32 bits), viajan más datos por cada pulso de reloj." },
+            { u: "1.2", q: "Si un sistema tiene un bus de direcciones de 32 bits, ¿cuál es el espacio máximo de memoria direccionable?", o: ["2 GB de memoria física sin extensiones de paginación", "4 GB de memoria física (2^32 bytes)", "8 GB de memoria física considerando alineación de palabras", "16 GB de memoria física con soporte para direccionamiento extendido"], c: 1, e: "2 elevado a la 32 permite direccionar hasta 4.294.967.296 bytes (4 GB)." },
+            { u: "1.2", q: "El concepto de 'programa almacenado' en Von Neumann implica que:", o: ["Las instrucciones se graban permanentemente en ROM durante la fabricación del sistema", "Las instrucciones y los datos se almacenan en la misma memoria y pueden ser modificados en ejecución", "Los programas se compilan previamente y se cargan en registros especiales de solo lectura", "El programa se divide en segmentos fijos que se cargan secuencialmente desde almacenamiento secundario"], c: 1, e: "La RAM guarda tanto el código como los datos, permitiendo que las computadoras sean programables." },
+            { u: "1.2", q: "En el modelo Von Neumann, ¿qué componente es responsable de generar las señales de temporización que sincronizan todas las operaciones?", o: ["La Unidad Aritmético-Lógica (ALU)", "El Registro de Estado o Flags", "El Oscilador de Cristal (reloj del sistema)", "El Controlador de Memoria Directo (DMA)"], c: 2, e: "El reloj genera los pulsos eléctricos que marcan el ritmo de trabajo de la CPU." },
+            { u: "1.2", q: "¿Cuál de las siguientes afirmaciones describe correctamente la diferencia entre el bus interno y el bus del sistema?", o: ["El bus interno conecta la CPU con la memoria caché L3, mientras el bus del sistema conecta con la RAM", "El bus interno opera dentro del chip del procesador, mientras el bus del sistema conecta componentes externos", "El bus interno transporta instrucciones y el bus del sistema transporta exclusivamente datos de E/S", "El bus interno usa señales analógicas mientras el bus del sistema usa señales digitales diferenciales"], c: 1, e: "Los buses internos comunican las partes de la CPU; los externos (del sistema) la comunican con el resto." },
+            { u: "1.2", q: "El Registro de Buffer de Memoria (MBR/MDR) en la arquitectura Von Neumann se utiliza para:", o: ["Mantener el contador de programa apuntando a la siguiente instrucción a ejecutar", "Almacenar temporalmente el dato leído desde memoria o que será escrito hacia ella", "Guardar el resultado de comparaciones aritméticas para las instrucciones de salto condicional", "Calcular las direcciones efectivas en el modo de direccionamiento indirecto de memoria"], c: 1, e: "Funciona como la 'puerta de entrada/salida' de los datos que vienen o van hacia la memoria RAM." },
+            { u: "1.2", q: "Una de las principales limitaciones del modelo Von Neumann en sistemas modernos de alta velocidad es que:", o: ["No puede ejecutar operaciones de punto flotante sin unidades de hardware adicionales", "La velocidad de transferencia entre CPU y memoria es significativamente menor a la velocidad interna del procesador", "Requiere que todos los programas se compilen para una arquitectura de instrucciones específica", "No soporta el concepto de interrupción, lo que impide la multitarea preventiva"], c: 1, e: "La brecha de velocidad entre CPU y RAM es el principal cuello de botella actual." },
+            { u: "1.2", q: "En la arquitectura funcional, ¿qué papel desempeña el Controlador de Acceso Directo a Memoria (DMA)?", o: ["Administra el caché L1 y L2 del procesador para minimizar los accesos a la RAM", "Permite transferencias de datos entre dispositivos y memoria sin intervención continua de la CPU", "Controla el arbitraje del bus cuando múltiples maestros intentan acceder simultáneamente", "Gestiona la traducción de direcciones virtuales a físicas en la unidad de gestión de memoria"], c: 1, e: "El DMA libera a la CPU de mover datos pesados (disco a RAM), mejorando el rendimiento." },
+            { u: "1.2", q: "La evolución de los buses paralelos a los buses seriales de alta velocidad (como PCIe) se justifica principalmente por:", o: ["Los buses seriales son más baratos de fabricar al requerir menos pines en los conectores", "Los buses paralelos sufren de skew (desfase) a altas frecuencias, mientras los seriales evitan este problema", "Los buses seriales permiten distancias de comunicación mayores sin pérdida de integridad de señal", "Los buses paralelos consumen más energía por bit transferido que sus equivalentes seriales"], c: 1, e: "A altas velocidades es imposible sincronizar muchos cables paralelos (skew); el serial es más estable." },
+            { u: "1.2", q: "¿Qué mecanismo arquitectónico permite a un procesador moderno superar parcialmente el cuello de botella de Von Neumann?", o: ["El incremento de la frecuencia del bus frontal (FSB) hasta igualar la velocidad de la CPU", "El uso de memorias caché jerárquicas que almacenan datos frecuentemente accedidos cerca de la CPU", "La implementación de buses de datos de 256 bits o más para aumentar el ancho de banda", "La división de la memoria en bancos independientes que operan en paralelo con distintos buses"], c: 1, e: "La caché guarda copias de la RAM dentro del chip, evitando las demoras del bus externo." },
+            { u: "1.2", q: "En la arquitectura Von Neumann, ¿qué contiene el Contador de Programa (PC) o Puntero de Instrucción (IP)?", o: ["El código binario de la instrucción que está siendo ejecutada actualmente", "El número de instrucciones ejecutadas desde el inicio del programa en ejecución", "La dirección de memoria de la próxima instrucción a ser buscada (fetch)", "El valor del segmento de pila utilizado por el sistema operativo para gestionar llamadas"], c: 2, e: "Indica siempre la dirección de la siguiente orden que la CPU debe traer de la memoria." },
+            { u: "1.2", q: "El arbitraje del bus en sistemas con múltiples maestros (procesadores o DMA) es necesario para:", o: ["Asegurar que la memoria caché L3 compartida no tenga problemas de coherencia entre núcleos", "Gestionar quién tiene acceso al bus en un momento dado, evitando colisiones en las transferencias", "Sincronizar el reloj del sistema entre diferentes dominios de frecuencia del hardware", "Controlar la velocidad de los ventiladores para mantener la temperatura dentro de rangos seguros"], c: 1, e: "Si varios componentes intentan usar el bus a la vez, el árbitro decide quién lo usa primero." },
+            { u: "1.2", q: "En una arquitectura Von Neumann, la Unidad de Control (UC) se comunica con la ALU principalmente mediante:", o: ["El bus externo de datos que conecta la CPU con la memoria principal del sistema", "Señales de control internas que le indican qué operación debe realizar con los datos de entrada", "El registro de instrucciones compartido que contiene el opcode en formato de 8 bits extendidos", "El bus de direcciones interno que selecciona cuál de los registros generales debe operar"], c: 1, e: "La UC es el 'cerebro' que le dice a la ALU qué cálculo hacer mediante pulsos eléctricos." },
+            { u: "1.2", q: "¿Cuál es el impacto de un bus de sistema de 64 bits de datos comparado con uno de 32 bits a la misma frecuencia?", o: ["Puede ejecutar el doble de instrucciones por segundo al procesar dos instrucciones simultáneamente", "Transfiere el doble de datos por ciclo, duplicando el ancho de banda máximo de memoria", "Permite direccionar el doble de memoria física sin necesidad de extensiones de paginación", "Reduce a la mitad el consumo energético al necesitar la mitad de ciclos para la misma transferencia"], c: 1, e: "Duplica la capacidad de carga de datos por cada pulsación de reloj, acelerando el sistema." },
+            { u: "1.2", q: "En el contexto del modelo Von Neumann, ¿qué es el 'espacio de E/S mapeado en memoria' (MMIO)?", o: ["Una técnica donde los dispositivos de E/S comparten el mismo espacio de direcciones que la RAM", "Un mecanismo de memoria virtual que permite acceder a archivos como si fueran segmentos de RAM", "Un protocolo de comunicación entre el controlador DMA y los dispositivos periféricos", "Una región de memoria protegida donde el sistema operativo almacena su tabla de interrupciones"], c: 0, e: "Permite hablar con el hardware usando las mismas instrucciones de lectura/escritura de la RAM." },
+            { u: "1.2", q: "La coherencia de caché en arquitecturas multiprocesador es un problema derivado principalmente de:", o: ["La diferencia en velocidad de reloj entre distintos núcleos de la misma CPU multicore", "El hecho de que múltiples cachés pueden tener copias diferentes de la misma dirección de memoria", "La incapacidad del bus del sistema para arbitrar correctamente entre múltiples controladores DMA", "El desfase entre el bus de instrucciones y el bus de datos en arquitecturas Harvard modificadas"], c: 1, e: "Si un núcleo cambia un dato en su caché privada, los demás deben saberlo para no usar datos viejos." },
+            { u: "1.2", q: "En la jerarquía de buses de una PC moderna, ¿cuál es la función del chipset (anteriormente northbridge/southbridge)?", o: ["Ejecutar las instrucciones del sistema operativo cuando la CPU está en modo de bajo consumo", "Actuar como árbitro y puente entre la CPU, la memoria RAM y los dispositivos periféricos", "Gestionar la comunicación exclusiva entre el microprocesador y la memoria caché L3", "Traducir instrucciones de alto nivel en microcódigo compatible con el hardware del procesador"], c: 1, e: "Es el centro logístico que interconecta todos los componentes de la placa base con el procesador." },
+
+            // Unidad 1.3 (41-60)
+            { u: "1.3", q: "En el ciclo de instrucción Fetch-Decode-Execute, la fase de 'Fetch' consiste en:", o: ["Decodificar el opcode de la instrucción para determinar qué operación debe realizar la ALU", "Obtener la instrucción desde la memoria usando la dirección almacenada en el Contador de Programa", "Ejecutar la operación aritmética o lógica especificada por la instrucción en curso", "Guardar el resultado de la operación en el registro destino o en la dirección de memoria indicada"], c: 1, e: "Es el primer paso: traer la instrucción de la memoria externa al interior de la CPU." },
+            { u: "1.3", q: "¿Cuál es la diferencia fundamental entre las arquitecturas RISC y CISC en términos de conjunto de instrucciones?", o: ["RISC usa instrucciones de longitud variable mientras CISC usa instrucciones de longitud fija", "RISC tiene pocas instrucciones simples de ciclo único, mientras CISC tiene instrucciones complejas de múltiples ciclos", "RISC solo puede operar con datos en memoria mientras CISC opera exclusivamente con registros", "RISC no admite operaciones de punto flotante nativas mientras CISC las implementa por hardware"], c: 1, e: "RISC apuesta por la simplicidad y velocidad; CISC por instrucciones potentes que hacen mucho en un paso." },
+            { u: "1.3", q: "El 'pipelining' en la CPU permite mejorar el rendimiento porque:", o: ["Reduce la frecuencia de reloj necesaria al paralelizar operaciones matemáticas complejas", "Permite que distintas etapas del ciclo de instrucción de diferentes instrucciones se ejecuten solapadas", "Duplica el número de unidades ALU disponibles para ejecutar dos instrucciones simultáneamente", "Elimina la necesidad de la fase de decodificación al precargar los operandos en registros temporales"], c: 1, e: "Como una cadena de montaje, permite procesar varias instrucciones a la vez en diferentes fases." },
+            { u: "1.3", q: "Un 'hazard de datos' en un pipeline ocurre cuando:", o: ["Dos instrucciones intentan escribir simultáneamente en el mismo registro del banco de registros", "Una instrucción necesita el resultado de una instrucción anterior que aún no ha completado su ejecución", "El predictor de ramas falla al anticipar el destino de una instrucción de salto condicional", "La caché de instrucciones no puede proveer instrucciones con suficiente velocidad para alimentar el pipeline"], c: 1, e: "Ocurre cuando hay una dependencia de datos entre instrucciones que están 'viviendo' juntas en el pipeline." },
+            { u: "1.3", q: "La Unidad Aritmético-Lógica (ALU) de un procesador es capaz de realizar todas las siguientes operaciones EXCEPTO:", o: ["Suma y sustracción de números enteros en complemento a dos", "Operaciones lógicas bit a bit (AND, OR, XOR, NOT)", "Gestión de interrupciones de hardware y software del sistema operativo", "Desplazamientos y rotaciones de bits sobre registros del procesador"], c: 2, e: "La ALU solo hace cálculos; las interrupciones las gestiona la Unidad de Control o hardware dedicado." },
+            { u: "1.3", q: "El registro de 'flags' o 'estado' en la CPU almacena información sobre:", o: ["Las direcciones de retorno de las subrutinas llamadas durante la ejecución del programa", "Las condiciones resultantes de operaciones aritméticas y lógicas (carry, zero, overflow, sign)", "Los permisos de acceso a memoria de los segmentos del programa en ejecución", "Las prioridades asignadas a las interrupciones pendientes en la cola del controlador"], c: 1, e: "Guarda el 'resultado' del estado del último cálculo (ej: si dio cero o si hubo desbordamiento)." },
+            { u: "1.3", q: "¿Qué es la 'ejecución fuera de orden' (out-of-order execution) en procesadores modernos?", o: ["La capacidad de ejecutar instrucciones en un orden diferente al del programa para aprovechar unidades funcionales libres", "La ejecución de instrucciones de diferentes hilos de manera intercalada para simular paralelismo", "La predicción especulativa del resultado de saltos condicionales antes de que se resuelva la condición", "El reordenamiento de instrucciones por el compilador para maximizar la eficiencia del pipeline"], c: 0, e: "Permite adelantar instrucciones que no dependen de nadie para que la CPU nunca esté parada." },
+            { u: "1.3", q: "En el contexto del ISA (Instruction Set Architecture), ¿qué se entiende por 'modo de direccionamiento inmediato'?", o: ["El operando se obtiene de la dirección de memoria indicada por un registro específico", "El operando es un valor constante codificado directamente dentro de la instrucción", "La dirección efectiva se calcula sumando un desplazamiento al contenido de un registro base", "El operando se obtiene accediendo dos veces a memoria en un proceso de doble indirección"], c: 1, e: "El dato está 'escrito' en la misma instrucción (ej: SUMAR 5), no hay que ir a la RAM." },
+            { u: "1.3", q: "El 'hazard de control' en un pipeline ocurre principalmente debido a:", o: ["Dos instrucciones que intentan acceder simultáneamente al mismo recurso de hardware limitado", "Instrucciones de salto cuyo destino no se conoce hasta que se completa la fase de ejecución", "Dependencias de datos entre instrucciones consecutivas que requieren espera o forwarding", "Instrucciones que requieren múltiples ciclos de reloj en la ALU causando burbujas en el pipeline"], c: 1, e: "Al llegar a un salto (IF), la CPU no sabe qué instrucción sigue y el pipeline se vacía o detiene." },
+            { u: "1.3", q: "El 'Hyper-Threading' (o SMT - Simultaneous Multi-Threading) de Intel permite que un núcleo físico:", o: ["Ejecute instrucciones a el doble de la frecuencia de reloj en operaciones de punto flotante", "Aparezca como dos núcleos lógicos, manteniendo el estado de dos hilos para aprovechar recursos ociosos", "Acceda a dos bancos de caché L1 independientes para duplicar el ancho de banda de instrucciones", "Ejecute dos instrucciones completas por ciclo de reloj usando unidades ALU duplicadas"], c: 1, e: "Duplica los registros para que dos hilos trabajen en el mismo núcleo físico alternadamente." },
+            { u: "1.3", q: "El microcódigo en una CPU CISC tiene como función:", o: ["Optimizar el uso de la caché L1 reduciendo los fallos de instrucciones en tiempo de compilación", "Implementar instrucciones complejas del ISA como secuencias de micro-operaciones simples internas", "Traducir el código fuente de alto nivel a código máquina durante la fase de carga del programa", "Gestionar la predicción de ramas para reducir el impacto de los hazards de control en el pipeline"], c: 1, e: "Traduce las órdenes pesadas de x86 a pequeños pasos internos que el hardware entiende." },
+            { u: "1.3", q: "¿Cuál es la función del registro acumulador (ACC) en procesadores de arquitectura clásica?", o: ["Mantener la dirección de la instrucción actualmente en ejecución para control de flujo", "Almacenar uno de los operandos y recibir el resultado de las operaciones de la ALU", "Gestionar la pila del sistema operativo para las llamadas a funciones y retornos", "Guardar el estado completo del procesador durante la atención de interrupciones"], c: 1, e: "Es el registro 'todo-terreno' donde se cargan datos y se reciben los resultados de la ALU." },
+            { u: "1.3", q: "En el ciclo de instrucción, después de la fase 'Execute', ¿qué ocurre con el Contador de Programa (PC)?", o: ["Se restablece a cero para reiniciar la ejecución desde el inicio del programa", "Se incrementa automáticamente para apuntar a la siguiente instrucción, salvo en instrucciones de salto", "Se guarda en la pila del sistema antes de cargar la siguiente instrucción en el decodificador", "Se carga con la dirección del vector de interrupción si hay una interrupción pendiente de alta prioridad"], c: 1, e: "El PC siempre avanza para quedar listo para el próximo ciclo de Fetch." },
+            { u: "1.3", q: "La 'predicción de ramas' (branch prediction) es una técnica de la CPU que busca:", o: ["Reducir el consumo energético desactivando partes del pipeline durante instrucciones de salto", "Anticipar el destino de instrucciones de salto condicional para continuar cargando el pipeline sin esperar", "Reorganizar el código en tiempo de compilación para eliminar instrucciones de salto innecesarias", "Duplicar la caché de instrucciones para mantener simultáneamente dos rutas de ejecución posibles"], c: 1, e: "Apuesta por un camino en un IF para que el pipeline no se detenga; si falla, debe limpiar todo." },
+            { u: "1.3", q: "La frecuencia de reloj de un procesador (expresada en GHz) determina directamente:", o: ["La cantidad de instrucciones que puede ejecutar por segundo en cualquier carga de trabajo", "El número de ciclos por segundo que sincronizan las operaciones internas del procesador", "La velocidad de transferencia máxima entre el procesador y la memoria RAM del sistema", "La cantidad de núcleos físicos activos que pueden procesar hilos de ejecución simultáneamente"], c: 1, e: "Marca la cadencia de trabajo; cuántas veces por segundo oscila el pulso eléctrico del sistema." },
+            { u: "1.3", q: "¿Qué ventaja ofrece una arquitectura superescalar sobre una pipeline simple?", o: ["Elimina completamente los hazards de datos al usar registros de renombramiento dinámico", "Puede completar más de una instrucción por ciclo de reloj al usar múltiples unidades de ejecución", "Opera a frecuencias de reloj más altas al reducir el número de etapas del pipeline de instrucciones", "Consume menos energía al desactivar unidades funcionales cuando no son necesarias en el ciclo actual"], c: 1, e: "Tiene varias 'tuberías' paralelas, permitiendo terminar múltiples instrucciones al mismo tiempo." },
+            { u: "1.3", q: "El 'forwarding' o 'data bypassing' en un pipeline es una técnica que resuelve:", o: ["Los hazards de control producidos por instrucciones de salto condicional no resueltas en la decodificación", "Los hazards de datos RAW (Read After Write) enviando el resultado directamente a la etapa que lo necesita", "Los hazards estructurales cuando múltiples instrucciones compiten por la misma unidad funcional", "Los problemas de coherencia de caché entre múltiples núcleos en arquitecturas multiprocesador"], c: 1, e: "Pasa el dato recién calculado a la siguiente etapa sin esperar a que se guarde en el registro." },
+            { u: "1.3", q: "En the contexto de la CPU, ¿qué representa el término IPC (Instrucciones Por Ciclo)?", o: ["El número total de instrucciones del conjunto ISA soportadas por el procesador", "Una métrica de eficiencia que indica cuántas instrucciones completa el procesador por ciclo de reloj", "El número de ciclos de reloj necesarios para completar una instrucción de punto flotante", "La cantidad de instrucciones almacenadas en la caché de instrucciones L1 del procesador"], c: 1, e: "Indica qué tan 'inteligente' es el núcleo para exprimir cada hercio de frecuencia." },
+            { u: "1.3", q: "La diferencia entre un procesador con 6 etapas de pipeline y uno con 20 etapas implica que:", o: ["El de 20 etapas siempre tendrá mayor IPC al poder solapar más instrucciones simultáneamente", "El de 20 etapas puede operar a mayor frecuencia pero sufre mayores penalizaciones ante hazards de control", "El de 6 etapas consume necesariamente más energía al procesar cada instrucción en menos ciclos", "El de 20 etapas puede ejecutar instrucciones de mayor longitud en bits por su mayor profundidad"], c: 1, e: "Un pipeline largo permite más GHz pero es más frágil ante saltos e interrupciones." },
+            { u: "1.3", q: "El registro de 'Instrucción' (IR) en la CPU almacena:", o: ["La dirección de la próxima instrucción que será buscada en la memoria principal del sistema", "La instrucción completa recién traída de memoria que está siendo decodificada y ejecutada", "El resultado intermedio de la operación aritmética mientras se completa el ciclo de escritura", "La dirección de retorno guardada cuando el procesador atiende una interrupción del sistema"], c: 1, e: "Es donde se guarda físicamente la instrucción binaria mientras el procesador la interpreta." },
+
+            // Unidad 1.4 (61-80)
+            { u: "1.4", q: "¿Cuál es la razón principal por la que la memoria caché L1 es más pequeña que la caché L2?", o: ["Por restricciones de licencias de fabricación que limitan su capacidad a nivel de diseño", "Porque mayor tamaño implica mayor latencia, y la L1 debe ser extremadamente rápida para el pipeline", "Porque la L1 solo almacena instrucciones mientras la L2 almacena tanto instrucciones como datos", "Para reducir el consumo eléctrico del chip ya que la L1 opera a la frecuencia completa del núcleo"], c: 1, e: "Para ser ultra-rápida, la L1 debe ser físicamente pequeña y estar muy cerca de los núcleos." },
+            { u: "1.4", q: "La memoria virtual permite que un proceso acceda a más memoria de la disponible físicamente mediante:", o: ["La compresión en tiempo real de los datos almacenados en la RAM para duplicar su capacidad efectiva", "El uso del almacenamiento secundario (disco) como extensión de la RAM mediante paginación o segmentación", "La reserva de una partición especial en la GPU para almacenar datos del proceso en ejecución", "La deduplicación de páginas idénticas compartidas entre múltiples procesos del sistema operativo"], c: 1, e: "Crea una ilusión de memoria infinita moviendo al disco los datos que no caben en la RAM." },
+            { u: "1.4", q: "El principio de 'localidad temporal' en el comportamiento de acceso a memoria significa que:", o: ["Los datos accedidos recientemente tienen alta probabilidad de ser accedidos de nuevo en el futuro próximo", "Los datos almacenados en posiciones de memoria contiguas se acceden en secuencia predecible", "La caché almacena preferentemente los datos más antiguos para maximizar la tasa de aciertos", "El sistema operativo asigna memoria en bloques contiguos para aprovechar la localidad del bus"], c: 0, e: "Si usaste una variable recién, es casi seguro que la usarás otra vez en milisegundos." },
+            { u: "1.4", q: "¿Qué es un 'fallo de caché' (cache miss) y cuál es su impacto en el rendimiento?", o: ["Una corrupción de datos en la caché que requiere reescribir el bloque completo desde la RAM", "Cuando el dato solicitado no está en caché, la CPU debe buscarlo en un nivel inferior, aumentando la latencia", "Una condición donde la caché está llena y debe desalojar bloques antes de aceptar nuevos datos", "Un error de coherencia entre las cachés L1 y L2 que requiere intervención del sistema operativo"], c: 1, e: "Es el retraso que sufre la CPU cuando debe salir a buscar algo a la RAM lenta." },
+            { u: "1.4", q: "La diferencia entre memoria DRAM y SRAM radica en que:", o: ["La DRAM es no volátil mientras la SRAM pierde su contenido al interrumpir la alimentación eléctrica", "La SRAM no requiere refresco periódico y es más rápida, pero más costosa y de menor densidad que la DRAM", "La DRAM usa biestables (flip-flops) mientras la SRAM usa condensadores que deben recargarse", "La SRAM puede almacenarse en chips separados del procesador mientras la DRAM se integra en el die"], c: 1, e: "SRAM es para caché (rápida/cara); DRAM es para memoria principal (densa/barata)." },
+            { u: "1.4", q: "En la política de reemplazo de caché LRU (Least Recently Used), se desaloja:", o: ["El bloque que fue accedido el mayor número de veces desde que ingresó a la caché", "El bloque que no ha sido accedido por el período más largo de tiempo entre los candidatos", "El bloque que fue cargado primero en la caché independientemente de su frecuencia de acceso", "El bloque que ocupa más espacio en la línea de caché para maximizar la capacidad disponible"], c: 1, e: "Elimina lo que lleva más tiempo sin usarse, asumiendo que no es importante ahora." },
+            { u: "1.4", q: "¿Qué es la 'thrashing' en el contexto de memoria virtual?", o: ["La fragmentación excesiva de la memoria física que impide la asignación de bloques contiguos grandes", "El estado en que el sistema pasa más tiempo intercambiando páginas entre RAM y disco que ejecutando procesos", "La corrupción de datos causada por accesos concurrentes no sincronizados a la misma página de memoria", "El agotamiento del espacio de swap en disco que obliga al sistema a terminar procesos forzosamente"], c: 1, e: "Ocurre cuando te quedas sin RAM y el sistema se 'ahoga' leyendo y escribiendo en el disco." },
+            { u: "1.4", q: "En la jerarquía de memoria, ¿por qué los registros del procesador están en la cima de la pirámide?", o: ["Porque tienen mayor capacidad de almacenamiento que cualquier otro nivel de la jerarquía", "Porque son los más rápidos (acceso en un ciclo de reloj) aunque son los más costosos y limitados en cantidad", "Porque almacenan de forma persistente el contexto del proceso entre cambios de contexto del SO", "Porque tienen la mayor cantidad de bits por celda permitiendo almacenar valores de mayor precisión"], c: 1, e: "Son la memoria más veloz que existe, pero solo hay unos pocos dentro de la CPU." },
+            { u: "1.4", q: "La memoria ROM (Read Only Memory) en el contexto del arranque del sistema almacena principalmente:", o: ["El sistema operativo completo comprimido para ser expandido en RAM durante el arranque", "El firmware (BIOS/UEFI) con las rutinas de inicialización y diagnóstico del hardware del sistema", "La tabla de particiones y el cargador de arranque del sistema operativo instalado", "La configuración personalizada del usuario incluidas contraseñas y preferencias del sistema"], c: 1, e: "Guarda las instrucciones básicas para encender la computadora y reconocer el hardware." },
+            { u: "1.4", q: "¿Cuál es la diferencia entre un SSD NVMe y un SSD SATA en términos de arquitectura de conexión?", o: ["El NVMe usa interfaz PCIe directamente, eliminando el controlador SATA y reduciendo significativamente la latencia", "El SATA opera en modo serial mientras el NVMe usa múltiples canales paralelos de comunicación", "El NVMe requiere controladores especiales en el sistema operativo que el SATA no necesita", "El SATA soporta velocidades de escritura superiores mientras el NVMe optimiza la velocidad de lectura"], c: 0, e: "NVMe quita 'capas' de protocolos antiguos y habla directo con el procesador vía PCIe." },
+            { u: "1.4", q: "La 'asociatividad' en el diseño de caché (direct-mapped vs. N-way set associative) afecta principalmente:", o: ["La velocidad de la operación de refresco necesaria para mantener los datos en la caché DRAM", "La tasa de conflictos: mayor asociatividad reduce los conflictos de mapeo pero aumenta la complejidad", "El tiempo de acceso a la caché ya que mayor asociatividad requiere menor número de comparaciones", "La cantidad de energía consumida por la caché durante operaciones de lectura de instrucciones"], c: 1, e: "Define qué tan flexible es la caché para guardar un dato en distintos casilleros posibles." },
+            { u: "1.4", q: "El concepto de 'swap space' en sistemas Linux es una partición o archivo que funciona como:", o: ["Área de almacenamiento temporal para archivos del sistema durante actualizaciones del kernel", "Extensión de la memoria RAM en disco, usada cuando la memoria física está completamente ocupada", "Zona de almacenamiento en RAM reservada para el intercambio de datos entre procesos del usuario", "Partición de respaldo donde el sistema copia la RAM antes de entrar en modo de hibernación"], c: 1, e: "Es el área de 'intercambio' en el disco cuando la RAM física se queda corta." },
+            { u: "1.4", q: "¿Qué implica el principio de 'localidad espacial' para el diseño de la caché?", o: ["Los datos deben almacenarse en posiciones de memoria de acuerdo con su frecuencia de acceso", "La caché debe cargar bloques completos de datos contiguos porque si se accede a uno, probablemente se acceda a los cercanos", "La caché debe priorizar el almacenamiento de instrucciones sobre datos ya que el código se ejecuta secuencialmente", "El sistema operativo debe mantener mapeadas en RAM las páginas más frecuentemente accedidas por el proceso"], c: 1, e: "Si lees una celda, es muy probable que leas las que están al lado enseguida." },
+            { u: "1.4", q: "En el contexto de memoria, ¿qué es la 'latencia CAS' (Column Address Strobe) de la DRAM?", o: ["Tiempo dirección virtual", "El número de ciclos de reloj entre el envío de la dirección de columna y la disponibilidad del dato", "El tiempo de refresco automático de la DRAM expresado en microsegundos por ciclo completo", "La latencia de arbitraje del bus de memoria cuando múltiples controladores compiten por acceso"], c: 1, e: "Es el tiempo de espera interno de la memoria para encontrar el dato exacto en sus celdas." },
+            { u: "1.4", q: "La TLB (Translation Lookaside Buffer) es un componente de hardware que acelera:", o: ["El acceso a la caché L3 mediante la precarga predictiva de páginas frecuentemente accedidas", "La traducción de direcciones virtuales a físicas al cachear las entradas recientes de la tabla de páginas", "Las operaciones de E/S al almacenar las últimas solicitudes de acceso a dispositivos periféricos", "La búsqueda de instrucciones al mantener un buffer de instrucciones precargadas del flujo de ejecución"], c: 1, e: "Es una caché especializada para no tener que calcular la dirección de memoria cada vez." },
+            { u: "1.4", q: "¿Por qué la memoria caché L3 suele ser compartida entre todos los núcleos de un procesador multicore?", o: ["Para reducir el costo de fabricación del chip al necesitar un solo controlador de caché centralizado", "Para facilitar el intercambio de datos entre núcleos sin necesitar acceder a la memoria principal externa", "Porque la L3 opera a la frecuencia del bus del sistema y no puede sincronizarse con cada núcleo individual", "Para garantizar que todos los núcleos tengan el mismo nivel de acceso a la caché de instrucciones"], c: 1, e: "Actúa como un área común de comunicación rápida entre los diferentes núcleos." },
+            { u: "1.4", q: "La política de escritura 'write-back' en caché implica que:", o: ["Cada escritura en caché se propaga inmediatamente a la memoria principal para garantizar consistencia", "Las modificaciones se almacenan solo en caché y se escriben a memoria principal cuando el bloque es desalojado", "Los datos se escriben simultáneamente en caché y en el almacenamiento secundario para redundancia", "Las escrituras se agrupan en lotes y se envían a memoria en ráfagas para maximizar el ancho de banda"], c: 1, e: "Es más eficiente: la CPU escribe en la caché y sigue, dejando la RAM para después." },
+            { u: "1.4", q: "¿Cuál es el principal inconveniente de aumentar indefinidamente la memoria RAM para mejorar el rendimiento?", o: ["La CPU no puede direccionar más de 128 GB en arquitecturas de 64 bits actuales", "A partir de cierto punto el cuello de botella se traslada a otros componentes y el beneficio marginal decrece", "El consumo eléctrico de la RAM aumenta cuadráticamente con la capacidad instalada", "El sistema operativo no puede gestionar más de 16 canales de memoria simultáneamente"], c: 1, e: "Tener RAM infinita no ayuda si tu procesador o disco son lentos." },
+            { u: "1.4", q: "En la jerarquía de memoria, ¿qué relación existe entre capacidad, velocidad y costo por bit?", o: ["A mayor capacidad, mayor velocidad y menor costo por bit en todos los niveles de la jerarquía", "Los niveles más rápidos y cercanos al procesador tienen menor capacidad y mayor costo por bit", "La velocidad y la capacidad son directamente proporcionales e inversamente proporcionales al costo", "El costo por bit es constante en todos los niveles y la diferencia radica solo en la velocidad de acceso"], c: 1, e: "Lo que es ultra-rápido es muy caro y ocupa mucho espacio físico (registros/caché)." },
+            { u: "1.4", q: "La tecnología de memoria DDR5 SDRAM, comparada con DDR4, mejora principalmente:", o: ["La capacidad máxima por módulo DIMM al triplicar la densidad de celdas de memoria", "El ancho de banda al doblar la tasa de transferencia y mejorar el controlador", "La compatibilidad con procesadores anteriores al usar el mismo estándar de voltaje de 1.2V", "La resistencia a errores mediante la incorporación obligatoria de ECC en todos los módulos del mercado"], c: 1, e: "Aumenta masivamente la cantidad de información que fluye hacia el procesador." },
+
+            // Unidad 1.5 (81-100)
+            { u: "1.5", q: "El POST (Power-On Self-Test) realizado durante el arranque de un sistema tiene como objetivo principal:", o: ["Cargar el sistema operativo desde el dispositivo de arranque configurado en el firmware", "Verificar la integridad y funcionalidad del hardware esencial antes de iniciar la carga del SO", "Actualizar el firmware del sistema con la última versión disponible en el servidor del fabricante", "Configurar automáticamente los parámetros de overclocking óptimos para la CPU instalada"], c: 1, e: "Chequea que la CPU, RAM y Video estén sanos antes de intentar cargar Windows o Linux." },
+            { u: "1.5", q: "¿Cuál es la diferencia fundamental entre BIOS tradicional y UEFI en el proceso de arranque?", o: ["La BIOS usa lenguaje ensamblador mientras que UEFI usa C, lo que permite mayor velocidad de inicio", "UEFI soporta discos mayores a 2 TB mediante GPT, ofrece interfaz gráfica y arranque seguro (Secure Boot)", "La BIOS puede cargar sistemas operativos de 64 bits mientras UEFI solo soporta sistemas de 32 bits", "UEFI requiere obligatoriamente una conexión a Internet durante el proceso de arranque inicial"], c: 1, e: "UEFI es el estándar moderno que permite discos gigantes, mouse y mayor seguridad." },
+            { u: "1.5", q: "El mecanismo de interrupciones permite que la CPU gestione dispositivos de E/S de manera eficiente porque:", o: ["Obliga a cada dispositivo a esperar su turno en una cola circular administrada por el firmware", "Permite a la CPU continuar ejecutando procesos y ser notificada solo cuando un dispositivo requiere atención", "Reduce el voltaje suministrado a dispositivos inactivos para disminuir el consumo energético global", "Asigna un núcleo de CPU dedicado exclusivamente a atender las solicitudes de los periféricos"], c: 1, e: "La CPU no pierde tiempo preguntando '¿ya terminaste?'; el hardware le avisa cuando está listo." },
+            { u: "1.5", q: "La diferencia entre 'polling' y 'interrupciones' como métodos de gestión de E/S es que:", o: ["El polling es más eficiente en dispositivos de alta velocidad mientras las interrupciones optimizan los lentos", "El polling verifica continuamente el estado del dispositivo consumiendo ciclos de CPU, mientras las interrupciones son asíncronas", "Las interrupciones son sincrónicas con el reloj del sistema mientras el polling opera de forma asíncrona", "El polling solo funciona con dispositivos internos mientras las interrupciones gestionan periféricos externos"], c: 1, e: "Polling es preguntar sin parar; Interrupción es esperar a que suene el timbre." },
+            { u: "1.5", q: "Cuando la CPU atiende una interrupción, el primer paso antes de ejecutar la rutina de servicio (ISR) es:", o: ["Deshabilitar todas las interrupciones del sistema para evitar interrupciones anidadas no controladas", "Guardar el contexto del proceso actual (PC, registros, flags) para poder reanudarlo posteriormente", "Identificar el tipo de interrupción consultando el vector de interrupciones de la tabla del kernel", "Notificar al sistema operativo mediante una llamada al sistema para que decida si atender la interrupción"], c: 1, e: "Debe 'congelar' lo que está haciendo para no perder el hilo después de atender el evento." },
+            { u: "1.5", q: "El gestor de arranque (bootloader) como GRUB tiene como función específica:", o: ["Realizar el diagnóstico POST y verificar la integridad del hardware antes de cargar el firmware", "Cargar el kernel del sistema operativo en memoria y transferirle el control de ejecución", "Gestionar el particionado del disco y crear el sistema de archivos principal del sistema", "Configurar los parámetros de red y establecer conexión con servidores de autenticación remotos"], c: 1, e: "Es el programa que 'levanta' el sistema operativo del disco a la RAM." },
+            { u: "1.5", q: "La interfaz PCIe (Peripheral Component Interconnect Express) usa una arquitectura de conexión punto a punto que:", o: ["Comparte el ancho de banda entre todos los dispositivos conectados al mismo bus físico", "Asigna canales (lanes) exclusivos por dispositivo, eliminando la contención del bus compartido clásico", "Opera únicamente con señales diferenciadas de alta frecuencia incompatibles con estándares anteriores", "Requiere configuración manual de velocidad y ancho de banda mediante jumpers en la placa madre"], c: 1, e: "Cada tarjeta tiene su propio 'carril' privado, evitando cuellos de botella compartidos." },
+            { u: "1.5", q: "¿Qué tipo de interrupción es generada cuando un programa intenta dividir un número por cero?", o: ["Interrupción enmascarable (IRQ) generada por el controlador de interrupciones programable (PIC/APIC)", "Excepción (trampa o fault) generada internamente por la CPU al detectar una condición de error", "Interrupción no enmascarable (NMI) generada para garantizar que el error sea atendido de inmediato", "Interrupción de software (syscall) invocada por el sistema operativo para gestionar el error aritmético"], c: 1, e: "Es un error que ocurre dentro del propio procesador durante la ejecución del código." },
+            { u: "1.5", q: "El Secure Boot (Arranque Seguro) de UEFI protege el proceso de arranque mediante:", o: ["El cifrado completo del disco de sistema para impedir el acceso no autorizado a los archivos del SO", "La verificación de firmas digitales del bootloader y el kernel para asegurar que no fueron alterados", "La autenticación biométrica del usuario antes de permitir que el proceso de POST continúe", "El aislamiento del firmware en una región de memoria protegida inaccesible desde el sistema operativo"], c: 1, e: "Bloquea cualquier software de arranque que no tenga una firma digital válida (evita virus de arranque)." },
+            { u: "1.5", q: "En la secuencia de arranque UEFI moderna, el orden correcto de los componentes ejecutados es:", o: ["POST -> Sistema Operativo -> Firmware UEFI -> Bootloader -> Kernel", "Firmware UEFI -> POST -> Bootloader -> Kernel -> Sistema Operativo", "Bootloader -> POST -> Firmware UEFI -> Kernel -> Sistema Operativo", "POST -> Bootloader -> Firmware UEFI -> Sistema Operativo -> Kernel"], c: 1, e: "Primero despierta la placa, se testea, se busca el cargador y este llama al sistema." },
+            { u: "1.5", q: "¿Qué es el 'Vector de Interrupciones' (Interrupt Vector Table - IVT) en la arquitectura x86?", o: ["Registro especial de la CPU que indica la prioridad de las interrupciones pendientes", "Una tabla en memoria que mapea cada tipo de interrupción con la dirección de su rutina de servicio (ISR)", "Un circuito integrado externo que arbitra las solicitudes de interrupción de múltiples dispositivos", "Una estructura de datos del sistema operativo que registra el historial de interrupciones"], c: 1, e: "Es el 'índice' donde la CPU busca a dónde ir cuando pasa algo (tecla, disco, error)." },
+            { u: "1.5", q: "La diferencia entre una interrupción enmascarable (IRQ) y una no enmascarable (NMI) es que:", o: ["Las IRQ son generadas por software mientras las NMI son generadas exclusivamente por hardware", "Las NMI no pueden ser ignoradas o postergadas por la CPU, mientras las IRQ sí pueden deshabilitarse", "Las IRQ tienen prioridad absoluta sobre las NMI en el controlador de interrupciones programable", "Las NMI son procesadas por el sistema operativo mientras las IRQ son atendidas directamente por la CPU"], c: 1, e: "Las NMI son para fallos críticos (humo, hardware roto) que la CPU no puede ignorar." },
+            { u: "1.5", q: "El estándar USB (Universal Serial Bus) se diseñó para reemplazar múltiples interfaces de E/S porque:", o: ["Ofrece velocidades de transferencia superiores a las de PCIe para dispositivos de almacenamiento", "Unifica bajo un estándar común la conexión de periféricos con hotplug y suministro de energía integrado", "Elimina completamente la necesidad de controladores (drivers) para dispositivos de clase estándar", "Proporciona cifrado de extremo a extremo en todas las transferencias de datos sin configuración adicional"], c: 1, e: "Permitió conectar todo con el mismo cable y sin apagar la PC." },
+            { u: "1.5", q: "Durante el arranque, la CMOS (Complementary Metal-Oxide-Semiconductor) del sistema mantiene:", o: ["El código del firmware BIOS/UEFI necesario para el proceso de inicialización del sistema", "La configuración del sistema (fecha, hora, orden de arranque) preservada por una batería auxiliar", "Las claves criptográficas del Secure Boot necesarias para verificar la firma del bootloader", "El mapa de memoria del sistema con las regiones reservadas para el firmware y los dispositivos"], c: 1, e: "Es la memoria que guarda tus ajustes de la BIOS gracias a la pila de la placa madre." },
+            { u: "1.5", q: "¿Qué es el 'modo protegido' en la arquitectura x86 y por qué es relevante en el proceso de arranque?", o: ["Un modo de operación exclusivo del firmware UEFI que impide modificaciones al sector de arranque", "Un modo de CPU que habilita memoria virtual, protección de memoria y privilegios diferenciados", "Una característica de seguridad del chipset que deshabilita puertos de debug durante la producción", "Un modo de bajo consumo activado durante el POST para reducir el calor generado en el arranque"], c: 1, e: "Es el estado de la CPU que permite que existan sistemas operativos modernos y estables." },
+            { u: "1.5", q: "La latencia en sistemas de E/S usando polling versus interrupciones generalmente favorece a las interrupciones porque:", o: ["El polling introduce latencia de propagación en el bus mientras las interrupciones usan rutas directas", "En polling la CPU consume ciclos comprobando dispositivos mientras que con interrupciones puede ejecutar otras tareas", "Las interrupciones tienen una latencia de respuesta inferior a un ciclo de reloj en todos los casos", "El polling es incompatible con múltiples dispositivos de E/S simultáneos en arquitecturas modernas"], c: 1, e: "Libera a la CPU de una espera improductiva, permitiendo que haga otras cosas." },
+            { u: "1.5", q: "¿Cuál es la función del MBR (Master Boot Record) en un disco con esquema de particionamiento clásico?", o: ["Almacenar la tabla de particiones GPT y el UUID de cada partición del disco físico", "Contener el código de arranque inicial y la tabla de particiones en los primeros 512 bytes del disco", "Guardar los metadatos del sistema de archivos incluyendo el directorio raíz y el mapa de bloques", "Mantener el hash de verificación de integridad del kernel del sistema operativo instalado"], c: 1, e: "Es el primer sector del disco; le dice a la BIOS dónde está el sistema operativo." },
+            { u: "1.5", q: "En el contexto de E/S, ¿qué es un 'driver' o controlador de dispositivo?", o: ["El firmware almacenado en el chip del dispositivo que controla sus operaciones internas", "Software del kernel que proporciona una interfaz abstracta entre el SO y el hardware específico", "El circuito integrado controlador dentro del dispositivo que gestiona las operaciones de transferencia", "Una capa del BIOS que permite acceder a dispositivos básicos antes de que el SO se haya cargado"], c: 1, e: "Es el traductor que le enseña a Windows cómo hablar con tu placa de video o impresora." },
+            { u: "1.5", q: "El estándar ACPI (Advanced Configuration and Power Interface) en el contexto del arranque permite:", o: ["Configurar la velocidad del bus PCIe en función de la temperatura del sistema en tiempo real", "La gestión colaborativa del hardware entre firmware y sistema operativo para control de energía", "Actualizar automáticamente el firmware del sistema descargando parches desde servidores del fabricante", "Verificar la autenticidad de los módulos de memoria instalados mediante checksums de fabricación"], c: 1, e: "Permite que el sistema operativo controle el apagado, suspensión y ahorro de energía." },
+            { u: "1.5", q: "¿Por qué las excepciones ('faults', 'traps', 'aborts') se consideran un tipo especial de interrupción?", o: ["Porque son generadas por dispositivos externos con mayor prioridad que las normales", "Porque son eventos síncronos con la ejecución del programa que requieren atención inmediata", "Porque solo pueden ser manejadas por el firmware UEFI antes de que el SO se haya cargado", "Porque interrumpen permanentemente la ejecución de todos los procesos del sistema"], c: 1, e: "Ocurren por culpa de algo que hizo el programa (ej: error de página o división por cero)." }
+        ];
+
+        // --- LÓGICA DE LA APLICACIÓN ---
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+        let userUnit = "all";
+
+        function initQuiz(unit) {
+            userUnit = unit;
+            if (unit === 'all') {
+                currentQuestions = [...quizData].sort(() => Math.random() - 0.5);
+            } else {
+                currentQuestions = quizData.filter(q => q.u === unit);
+            }
+
+            currentIndex = 0;
+            score = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+
+            document.getElementById('home').classList.remove('active');
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('quiz').classList.add('active');
+
+            showQuestion();
+        }
+
+        function goToMenu() {
+            if (confirm("¿Estás seguro de que quieres volver al menú? Perderás el progreso actual.")) {
+                currentIndex = 0;
+                score = 0;
+                userAnswers = [];
+                document.getElementById('quiz').classList.remove('active');
+                document.getElementById('result').classList.remove('active');
+                document.getElementById('home').classList.add('active');
+            }
+        }
+
+        function retryErrors() {
+            const wrongQuestions = currentQuestions.filter((q, idx) => {
+                return userAnswers[idx] !== null && userAnswers[idx] !== q.c;
+            });
+
+            if (wrongQuestions.length === 0) {
+                alert("¡No tienes errores que reintentar! Excelente trabajo.");
+                return;
+            }
+
+            currentQuestions = [...wrongQuestions];
+            currentIndex = 0;
+            score = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('quiz').classList.add('active');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = currentQuestions[currentIndex];
+
+            // UI
+            document.getElementById('label-unit').innerText = "Unidad " + q.u;
+            document.getElementById('label-progress').innerText = `${currentIndex + 1} / ${currentQuestions.length}`;
+            document.getElementById('bar').style.width = `${((currentIndex + 1) / currentQuestions.length) * 100}%`;
+
+            updateScore();
+
+            document.getElementById('text-q').innerText = q.q;
+
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            const answeredIdx = userAnswers[currentIndex];
+            const isAnswered = answeredIdx !== null;
+
+            q.o.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                if (isAnswered) {
+                    btn.classList.add('disabled');
+                    if (index === q.c) btn.classList.add('highlight-correct');
+                    if (index === answeredIdx && index !== q.c) btn.classList.add('selected-wrong');
+                    if (index === answeredIdx && index === q.c) btn.classList.add('selected-correct');
+                }
+                btn.innerHTML = `<span class="option-letter">${letters[index]})</span> <span>${opt}</span>`;
+                btn.onclick = () => selectOption(index);
+                optionsBox.appendChild(btn);
+            });
+
+            if (isAnswered) {
+                showFeedback(answeredIdx === q.c);
+            } else {
+                document.getElementById('feedback').classList.remove('show');
+                document.getElementById('action-btn').style.display = 'none';
+            }
+
+            document.getElementById('prev-btn').disabled = (currentIndex === 0);
+        }
+
+        function showFeedback(isCorrect) {
+            const q = currentQuestions[currentIndex];
+            const feed = document.getElementById('feedback');
+            feed.className = 'feedback-area show ' + (isCorrect ? 'correct' : 'wrong');
+            document.getElementById('feedback-status').innerText = isCorrect ? "✅ Correcto" : "❌ Incorrecto";
+            document.getElementById('feedback-desc').innerText = q.e;
+
+            const actionBtn = document.getElementById('action-btn');
+            actionBtn.innerText = (currentIndex < currentQuestions.length - 1) ? "Siguiente Pregunta" : "Ver Resultados";
+            actionBtn.style.display = 'block';
+        }
+
+        function updateScore() {
+            score = userAnswers.reduce((acc, ans, idx) => {
+                return (ans !== null && ans === currentQuestions[idx].c) ? acc + 1 : acc;
+            }, 0);
+            const totalAnswered = userAnswers.filter(a => a !== null).length;
+            document.getElementById('score-live').innerText = `Puntaje: ${score} / ${totalAnswered}`;
+        }
+
+        function selectOption(idx) {
+            if (userAnswers[currentIndex] !== null) return;
+
+            userAnswers[currentIndex] = idx;
+            const q = currentQuestions[currentIndex];
+            const isCorrect = (idx === q.c);
+
+            showFeedback(isCorrect);
+
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, i) => {
+                btn.classList.add('disabled');
+                if (i === q.c) btn.classList.add('highlight-correct');
+                if (i === idx && !isCorrect) btn.classList.add('selected-wrong');
+                if (i === idx && isCorrect) btn.classList.add('selected-correct');
+            });
+
+            updateScore();
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showQuestion();
+            }
+        }
+
+        function handleAction() {
+            if (currentIndex < currentQuestions.length - 1) {
+                currentIndex++;
+                showQuestion();
+            } else {
+                showFinal();
+            }
+        }
+
+        function showFinal() {
+            document.getElementById('quiz').classList.remove('active');
+            document.getElementById('result').classList.add('active');
+
+            const percent = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('res-percent').innerText = percent + "%";
+            document.getElementById('res-correct').innerText = `Correctas: ${score} de ${currentQuestions.length}`;
+
+            const errorsCount = currentQuestions.length - score;
+            document.getElementById('retry-errors-btn').style.display = errorsCount > 0 ? 'block' : 'none';
+
+            const units = ["1.1", "1.2", "1.3", "1.4", "1.5"];
+            let breakdown = {};
+            units.forEach(u => breakdown[u] = { correct: 0, total: 0 });
+
+            currentQuestions.forEach((q, idx) => {
+                const u = q.u;
+                if (breakdown[u]) {
+                    breakdown[u].total++;
+                    if (userAnswers[idx] === q.c) {
+                        breakdown[u].correct++;
+                    }
+                }
+            });
+
+            const breakdownDiv = document.getElementById('unit-breakdown');
+            breakdownDiv.innerHTML = '<h3 style="margin-top:0; color:#fff; font-size:1rem;">Rendimiento por Unidad</h3>';
+
+            units.forEach(u => {
+                if (breakdown[u].total > 0) {
+                    const item = document.createElement('div');
+                    item.className = 'unit-item';
+                    item.innerHTML = `<span class="unit-label">Unidad ${u}</span><span class="unit-score">${breakdown[u].correct} / ${breakdown[u].total}</span>`;
+                    breakdownDiv.appendChild(item);
+                }
+            });
+
+            let msg = "";
+            if (percent >= 90) msg = "¡Excelente! Estás listo para el parcial.";
+            else if (percent >= 70) msg = "Muy bien. Repasa los errores para asegurar.";
+            else if (percent >= 40) msg = "Necesitas estudiar más estas unidades.";
+            else msg = "Repasa todo el contenido, falta reforzar conceptos.";
+
+            document.getElementById('res-grade').innerText = msg;
+        }
+    </script>
+
+</body>
+
+</html>
